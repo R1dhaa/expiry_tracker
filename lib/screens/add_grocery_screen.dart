@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../models/grocery_item.dart';
 
 class AddGroceryScreen extends StatefulWidget {
@@ -11,56 +11,64 @@ class AddGroceryScreen extends StatefulWidget {
 
 class _AddGroceryScreenState extends State<AddGroceryScreen> {
   final TextEditingController nameController = TextEditingController();
-  DateTime selectedDate = DateTime.now();
+  DateTime? _selectedDate;
 
-  void saveGroceryItem() {
-    final box = Hive.box('groceryBox');
-    final newItem = GroceryItem(name: nameController.text, expiryDate: selectedDate);
-    box.add(newItem);
-    Navigator.pop(context);
-  }
-
-  void pickDate() async {
-    final DateTime? date = await showDatePicker(
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate,
+      initialDate: DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime(2100),
     );
-    if (date != null) {
+    if (picked != null && picked != _selectedDate) {
       setState(() {
-        selectedDate = date;
+        _selectedDate = picked;
       });
     }
+  }
+
+  void _addGroceryItem() {
+    if (nameController.text.isEmpty || _selectedDate == null) return;
+
+    final box = Hive.box<GroceryItem>('groceryBox');
+    final newItem = GroceryItem(name: nameController.text, expiryDate: _selectedDate!);
+
+    box.add(newItem);
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Add Grocery")),
+      appBar: AppBar(title: const Text("Add Grocery")),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
               controller: nameController,
-              decoration: InputDecoration(labelText: "Grocery Name"),
+              decoration: const InputDecoration(labelText: "Grocery Item Name"),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 20),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Expiry Date: ${selectedDate.toLocal()}"),
-                TextButton(
-                  onPressed: pickDate,
-                  child: Text("Pick Date"),
-                )
+                Expanded(
+                  child: Text(
+                    _selectedDate == null
+                        ? "No date selected"
+                        : "Expires on: ${_selectedDate!.toLocal()}",
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: () => _selectDate(context),
+                ),
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: saveGroceryItem,
-              child: Text("Save"),
+              onPressed: _addGroceryItem,
+              child: const Text("Add Grocery"),
             ),
           ],
         ),
