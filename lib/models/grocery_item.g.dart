@@ -19,17 +19,20 @@ class GroceryItemAdapter extends TypeAdapter<GroceryItem> {
     return GroceryItem(
       name: fields[0] as String,
       expiryDate: fields[1] as DateTime,
+      expiryTime: fields[2] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, GroceryItem obj) {
     writer
-      ..writeByte(2)
+      ..writeByte(3)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
-      ..write(obj.expiryDate);
+      ..write(obj.expiryDate)
+      ..writeByte(2)
+      ..write(obj.expiryTime);
   }
 
   @override
