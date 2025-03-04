@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/grocery_item.dart';
 import 'add_grocery_screen.dart';
+import 'package:intl/intl.dart';
 
 class GroceryListScreen extends StatefulWidget {
   const GroceryListScreen({super.key});
@@ -40,7 +41,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
               final item = box.getAt(index)!;
               return ListTile(
                 title: Text(item.name),
-                subtitle: Text("Expiry: ${item.expiryDate.toLocal()}"),
+                subtitle: Text("Expiry: ${DateFormat('yyyy-MM-dd').format(item.expiryDate)}"),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () => _deleteItem(index),

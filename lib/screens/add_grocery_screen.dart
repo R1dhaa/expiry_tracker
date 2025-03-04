@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import '../models/grocery_item.dart';
+import 'package:intl/intl.dart';
 
 class AddGroceryScreen extends StatefulWidget {
   const AddGroceryScreen({super.key});
@@ -12,7 +13,6 @@ class AddGroceryScreen extends StatefulWidget {
 class _AddGroceryScreenState extends State<AddGroceryScreen> {
   final TextEditingController _nameController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
-  TimeOfDay _selectedTime = TimeOfDay.now(); // NEW TIME FIELD
   late Box<GroceryItem> groceryBox;
 
   @override
@@ -21,23 +21,22 @@ class _AddGroceryScreenState extends State<AddGroceryScreen> {
     groceryBox = Hive.box<GroceryItem>('groceryBox');
   }
 
-void _addItem() {
-  if (_nameController.text.trim().isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Item name cannot be empty!")),
+  void _addItem() {
+    if (_nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Item name cannot be empty!")),
+      );
+      return;
+    }
+
+    final newItem = GroceryItem(
+      name: _nameController.text.trim(),
+      expiryDate: _selectedDate,
     );
-    return;
+
+    groceryBox.add(newItem);
+    Navigator.pop(context);
   }
-
-  String formattedTime = _selectedTime.format(context);
-  final newItem = GroceryItem(
-    name: _nameController.text.trim(),
-    expiryDate: _selectedDate,
-  );
-
-  groceryBox.add(newItem);
-  Navigator.pop(context);
-}
 
   void _pickDate(BuildContext context) async {
   DateTime? picked = await showDatePicker(
@@ -55,19 +54,6 @@ void _addItem() {
 }
 
 
-  void _pickTime(BuildContext context) async {
-    TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime,
-    );
-
-    if (picked != null) {
-      setState(() {
-        _selectedTime = picked;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -84,24 +70,14 @@ void _addItem() {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Expiry Date: ${_selectedDate.toLocal()}".split(' ')[0]),
+                Text("Expiry Date: ${DateFormat('yyyy-MM-dd').format(_selectedDate)}"),
                 ElevatedButton(
                   onPressed: () => _pickDate(context),
                   child: const Text("Pick Date"),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Expiry Time: ${_selectedTime.format(context)}"),
-                ElevatedButton(
-                  onPressed: () => _pickTime(context),
-                  child: const Text("Pick Time"),
-                ),
-              ],
-            ),
+            
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _addItem,
